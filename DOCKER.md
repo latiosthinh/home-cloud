@@ -82,8 +82,8 @@ Set in `.env` file or directly in `docker-compose.yml`:
 
 ### Multi-Stage Build
 The Dockerfile uses a multi-stage build for optimization:
-1. **deps** - Installs dependencies
-2. **builder** - Builds the Next.js application
+1. **deps** - Installs dependencies using Yarn
+2. **builder** - Builds the Next.js application with Yarn
 3. **runner** - Creates minimal production image
 
 ### Benefits:

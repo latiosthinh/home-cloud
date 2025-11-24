@@ -59,7 +59,7 @@
 ### Prerequisites
 
 - **Node.js** 18+ installed
-- **npm** or **yarn** package manager
+- **Yarn** package manager
 
 ### Installation
 
@@ -71,7 +71,7 @@
 
 2. **Install dependencies**
    ```bash
-   npm install
+   yarn install
    ```
 
 3. **Set up environment variables**
@@ -83,7 +83,7 @@
 
 4. **Run the development server**
    ```bash
-   npm run dev
+   yarn dev
    ```
 
 5. **Open your browser**
@@ -307,8 +307,8 @@ docker-compose up -d --build
 ### Production Build (Without Docker)
 
 ```bash
-npm run build
-npm start
+yarn build
+yarn start
 ```
 
 ### Environment Variables for Production
