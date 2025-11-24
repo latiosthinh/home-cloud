@@ -257,7 +257,54 @@ Delete a file or folder.
 
 ## 🚀 Deployment
 
-### Production Build
+### 🐳 Docker Deployment (Recommended)
+
+The easiest way to deploy Home Cloud is using Docker Compose.
+
+**Prerequisites:**
+- Docker and Docker Compose installed
+
+**Steps:**
+
+1. **Set up environment variables**
+   
+   Create a `.env` file in the root directory:
+   ```env
+   APP_PASSWORD=your_secure_password_here
+   ```
+
+2. **Build and start the container**
+   ```bash
+   docker-compose up -d
+   ```
+
+3. **Access the application**
+   
+   Navigate to [http://localhost:21043](http://localhost:21043)
+
+**Docker Commands:**
+```bash
+# Start the application
+docker-compose up -d
+
+# Stop the application
+docker-compose down
+
+# View logs
+docker-compose logs -f
+
+# Rebuild after code changes
+docker-compose up -d --build
+```
+
+**Notes:**
+- The application runs on port **21043** (mapped from internal port 3000)
+- Uploaded files are persisted in the `./uploads` directory
+- Environment variables can be set in a `.env` file or directly in `docker-compose.yml`
+
+---
+
+### Production Build (Without Docker)
 
 ```bash
 npm run build
@@ -274,6 +321,7 @@ NODE_ENV=production
 
 ### Recommended Platforms
 
+- **Docker** - Self-hosted with Docker Compose (recommended)
 - **Vercel** - Optimized for Next.js
 - **Railway** - Easy deployment with persistent storage
 - **DigitalOcean** - Full control with App Platform
