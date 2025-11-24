@@ -25,13 +25,22 @@ export async function GET(
 ) {
     try {
         const { name } = await params
-        const filename = name
+
+        // The name parameter can contain path separators for nested files
+        // Decode the URL-encoded path
+        const decodedPath = decodeURIComponent(name)
+
+        // Basic validation to prevent directory traversal
+        if (decodedPath.includes('..') || decodedPath.includes('\0')) {
+            return NextResponse.json({ error: 'Invalid file path' }, { status: 400 })
+        }
+
         const uploadDir = path.join(process.cwd(), 'uploads')
-        const filepath = path.join(uploadDir, filename)
+        const filepath = path.join(uploadDir, decodedPath)
 
         try {
             const fileBuffer = await readFile(filepath)
-            const contentType = getMimeType(filename)
+            const contentType = getMimeType(decodedPath)
 
             return new NextResponse(fileBuffer, {
                 headers: {
