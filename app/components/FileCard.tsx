@@ -1,5 +1,7 @@
 'use client'
 
+import { useState } from 'react'
+
 import { Download, Trash2, Share2 } from 'lucide-react'
 import { FileItem, getFileIcon, isImageFile, formatFileSize } from '@/lib/fileIconUtils'
 
@@ -9,9 +11,38 @@ interface FileCardProps {
     onDownload: (item: FileItem) => void
     onShare: (item: FileItem) => void
     onDelete: (item: FileItem) => void
+    onDrop?: (files: File[], folderPath: string) => void
 }
 
-export function FileCard({ item, onNavigate, onDownload, onShare, onDelete }: FileCardProps) {
+export function FileCard({ item, onNavigate, onDownload, onShare, onDelete, onDrop }: FileCardProps) {
+    const [isDragOver, setIsDragOver] = useState(false)
+
+    const handleDragOver = (e: React.DragEvent) => {
+        if (!item.isDirectory || !onDrop) return
+        e.preventDefault()
+        e.stopPropagation()
+        setIsDragOver(true)
+    }
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        if (!item.isDirectory || !onDrop) return
+        e.preventDefault()
+        e.stopPropagation()
+        setIsDragOver(false)
+    }
+
+    const handleDrop = (e: React.DragEvent) => {
+        if (!item.isDirectory || !onDrop) return
+        e.preventDefault()
+        e.stopPropagation()
+        setIsDragOver(false)
+
+        const files = Array.from(e.dataTransfer.files)
+        if (files.length > 0) {
+            onDrop(files, item.path)
+        }
+    }
+
     const handleClick = () => {
         if (item.isDirectory && onNavigate) {
             onNavigate(item.path)
@@ -20,8 +51,11 @@ export function FileCard({ item, onNavigate, onDownload, onShare, onDelete }: Fi
 
     return (
         <div
-            className={`file-card ${item.isDirectory ? 'folder-card' : ''}`}
+            className={`file-card ${item.isDirectory ? 'folder-card' : ''} ${isDragOver ? 'ring-2 ring-blue-500 bg-blue-50 dark:bg-blue-900/20' : ''}`}
             onClick={handleClick}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
             style={{ cursor: item.isDirectory ? 'pointer' : 'default' }}
         >
             <div className="file-preview">

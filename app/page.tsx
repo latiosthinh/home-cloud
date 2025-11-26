@@ -13,6 +13,7 @@ import { NewFolderModal } from './components/NewFolderModal'
 import { DeleteModal } from './components/DeleteModal'
 import { ShareModal } from './components/ShareModal'
 import { UploadProgress } from './components/UploadProgress'
+import { DragOverlay } from './components/DragOverlay'
 
 export default function Dashboard() {
   const router = useRouter()
@@ -76,16 +77,19 @@ export default function Dashboard() {
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
-    setIsDragging(true)
+    if (!isDragging) setIsDragging(true)
   }
 
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault()
+    // Only set dragging to false if we're leaving the window or the main container
+    if (e.currentTarget.contains(e.relatedTarget as Node)) return
     setIsDragging(false)
   }
 
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault()
+    e.stopPropagation()
     setIsDragging(false)
 
     const droppedFiles = Array.from(e.dataTransfer.files)
@@ -100,7 +104,7 @@ export default function Dashboard() {
     }
   }
 
-  const uploadFiles = async (fileList: File[]) => {
+  const uploadFiles = async (fileList: File[], targetPath: string = currentPath) => {
     setUploading(true)
     for (const file of fileList) {
       setCurrentUploadFile(file.name)
@@ -108,7 +112,7 @@ export default function Dashboard() {
 
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('path', currentPath)
+      formData.append('path', targetPath)
 
       try {
         await new Promise<void>((resolve, reject) => {
@@ -142,6 +146,10 @@ export default function Dashboard() {
     setUploadProgress(0)
     setCurrentUploadFile('')
     fetchFiles()
+  }
+
+  const handleFolderDrop = async (files: File[], folderPath: string) => {
+    await uploadFiles(files, folderPath)
   }
 
   const handleCreateFolder = async () => {
@@ -234,7 +242,12 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="dashboard-container">
+    <div
+      className="dashboard-container min-h-screen"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       <header className="dashboard-header">
         <h1>Home Cloud</h1>
         <button onClick={handleLogout} className="icon-button" title="Logout">
@@ -275,6 +288,7 @@ export default function Dashboard() {
             onDownload={handleDownload}
             onShare={handleShare}
             onDelete={openDeleteModal}
+            onDrop={handleFolderDrop}
           />
         ))}
       </div>
@@ -309,6 +323,7 @@ export default function Dashboard() {
       />
 
       <UploadProgress />
+      <DragOverlay />
     </div>
   )
 }
