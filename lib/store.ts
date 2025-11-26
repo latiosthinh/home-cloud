@@ -15,6 +15,8 @@ interface DashboardState {
     // Upload state
     isDragging: boolean
     uploading: boolean
+    uploadProgress: number
+    currentUploadFile: string
 
     // Modal state
     showNewFolderModal: boolean
@@ -35,6 +37,8 @@ interface DashboardState {
 
     setIsDragging: (isDragging: boolean) => void
     setUploading: (uploading: boolean) => void
+    setUploadProgress: (progress: number) => void
+    setCurrentUploadFile: (fileName: string) => void
 
     openNewFolderModal: () => void
     closeNewFolderModal: () => void
@@ -59,6 +63,8 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 
     isDragging: false,
     uploading: false,
+    uploadProgress: 0,
+    currentUploadFile: '',
 
     showNewFolderModal: false,
     newFolderName: '',
@@ -86,6 +92,8 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
 
     setIsDragging: (isDragging) => set({ isDragging }),
     setUploading: (uploading) => set({ uploading }),
+    setUploadProgress: (progress) => set({ uploadProgress: progress }),
+    setCurrentUploadFile: (fileName) => set({ currentUploadFile: fileName }),
 
     openNewFolderModal: () => set({ showNewFolderModal: true }),
     closeNewFolderModal: () => set({ showNewFolderModal: false, newFolderName: '' }),

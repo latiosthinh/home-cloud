@@ -12,6 +12,7 @@ import { FileCard } from './components/FileCard'
 import { NewFolderModal } from './components/NewFolderModal'
 import { DeleteModal } from './components/DeleteModal'
 import { ShareModal } from './components/ShareModal'
+import { UploadProgress } from './components/UploadProgress'
 
 export default function Dashboard() {
   const router = useRouter()
@@ -45,6 +46,8 @@ export default function Dashboard() {
     openShareModal,
     closeShareModal,
     navigateToFolder,
+    setUploadProgress,
+    setCurrentUploadFile,
   } = useDashboardStore()
 
   const fetchFiles = useCallback(async () => {
@@ -100,20 +103,44 @@ export default function Dashboard() {
   const uploadFiles = async (fileList: File[]) => {
     setUploading(true)
     for (const file of fileList) {
+      setCurrentUploadFile(file.name)
+      setUploadProgress(0)
+
       const formData = new FormData()
       formData.append('file', file)
       formData.append('path', currentPath)
 
       try {
-        await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
+        await new Promise<void>((resolve, reject) => {
+          const xhr = new XMLHttpRequest()
+          xhr.open('POST', '/api/upload')
+
+          xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+              const progress = (event.loaded / event.total) * 100
+              setUploadProgress(progress)
+            }
+          }
+
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve()
+            } else {
+              reject(new Error(`Upload failed with status ${xhr.status}`))
+            }
+          }
+
+          xhr.onerror = () => reject(new Error('Upload failed'))
+
+          xhr.send(formData)
         })
       } catch (error) {
         console.error('Upload failed', error)
       }
     }
     setUploading(false)
+    setUploadProgress(0)
+    setCurrentUploadFile('')
     fetchFiles()
   }
 
@@ -239,7 +266,7 @@ export default function Dashboard() {
         onFileSelect={handleFileSelect}
       />
 
-      <div className="file-grid" style={{ marginTop: '2rem' }}>
+      <div className="file-grid mt-8">
         {items.map((item) => (
           <FileCard
             key={item.path}
@@ -280,6 +307,8 @@ export default function Dashboard() {
         onClose={closeShareModal}
         onCopy={copyToClipboard}
       />
+
+      <UploadProgress />
     </div>
   )
 }
