@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Upload, File as FileIcon, Image as ImageIcon, Film, FileText, Download, Trash2, LogOut, Folder, FolderPlus, ChevronRight, Home, Search, SortAsc, SortDesc } from 'lucide-react'
+import { Upload, File as FileIcon, Image as ImageIcon, Film, FileText, Download, Trash2, LogOut, Folder, FolderPlus, ChevronRight, Home, Search, SortAsc, SortDesc, Share2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 interface FileItem {
@@ -29,6 +29,12 @@ export default function Dashboard() {
   const [newFolderName, setNewFolderName] = useState('')
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<FileItem | null>(null)
+
+  // Share state
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [shareLink, setShareLink] = useState('')
+  const [itemToShare, setItemToShare] = useState<FileItem | null>(null)
+
   const router = useRouter()
 
   const fetchFiles = useCallback(async () => {
@@ -139,6 +145,55 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Failed to delete item', error)
     }
+  }
+
+  const handleDownload = async (item: FileItem) => {
+    try {
+      const res = await fetch('/api/download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemPath: item.path }),
+      })
+
+      if (res.ok) {
+        const blob = await res.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = item.name + (item.isDirectory ? '.zip' : '')
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      }
+    } catch (error) {
+      console.error('Download failed', error)
+    }
+  }
+
+  const handleShare = async (item: FileItem) => {
+    try {
+      const res = await fetch('/api/share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemPath: item.path }),
+      })
+
+      if (res.ok) {
+        const share = await res.json()
+        const link = `${window.location.origin}/share/${share.id}`
+        setShareLink(link)
+        setItemToShare(item)
+        setShowShareModal(true)
+      }
+    } catch (error) {
+      console.error('Share failed', error)
+    }
+  }
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(shareLink)
+    alert('Link copied to clipboard!')
   }
 
   const navigateToFolder = (folderPath: string) => {
@@ -316,16 +371,26 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="file-actions" style={{ padding: '0 0.75rem 0.75rem', display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-              {!item.isDirectory && (
-                <a
-                  href={`/api/file/${encodeURIComponent(item.path)}`}
-                  download
-                  className="action-icon"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Download size={16} />
-                </a>
-              )}
+              <button
+                className="action-icon"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleShare(item)
+                }}
+                title="Share"
+              >
+                <Share2 size={16} />
+              </button>
+              <button
+                className="action-icon"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleDownload(item)
+                }}
+                title="Download"
+              >
+                <Download size={16} />
+              </button>
               <button
                 className="action-icon delete-icon"
                 onClick={(e) => {
@@ -333,6 +398,7 @@ export default function Dashboard() {
                   setItemToDelete(item)
                   setShowDeleteModal(true)
                 }}
+                title="Delete"
               >
                 <Trash2 size={16} />
               </button>
@@ -388,6 +454,33 @@ export default function Dashboard() {
               </button>
               <button className="modal-button delete" onClick={handleDeleteItem}>
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Share Modal */}
+      {showShareModal && itemToShare && (
+        <div className="modal-overlay" onClick={() => setShowShareModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>Share {itemToShare.name}</h2>
+            <p>Anyone with this link can view and download this item.</p>
+            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+              <input
+                type="text"
+                className="modal-input"
+                value={shareLink}
+                readOnly
+                style={{ marginBottom: 0 }}
+              />
+              <button className="modal-button confirm" onClick={copyToClipboard}>
+                Copy
+              </button>
+            </div>
+            <div className="modal-actions">
+              <button className="modal-button cancel" onClick={() => setShowShareModal(false)}>
+                Close
               </button>
             </div>
           </div>
