@@ -26,10 +26,9 @@ export async function POST(request: Request) {
             }
         }
 
-        // Sanitize filename and add timestamp to prevent collisions
-        const timestamp = Date.now()
+        // Sanitize filename (no timestamp prefix)
         const safeName = sanitizeName(file.name)
-        const filename = `${timestamp}-${safeName}`
+        const filename = safeName
 
         // Build the full path
         const uploadsDir = getUploadsDir()

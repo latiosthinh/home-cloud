@@ -42,7 +42,9 @@ export function getUploadsDir(): string {
  * Sanitizes a filename or folder name
  */
 export function sanitizeName(name: string): string {
-    return name.replace(/[^a-zA-Z0-9._-\s]/g, '_').trim()
+    // Remove illegal characters for Windows/Linux/macOS
+    // < > : " / \ | ? *
+    return name.replace(/[<>:"/\\|?*]/g, '').trim()
 }
 
 /**
