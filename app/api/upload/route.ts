@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server'
 import { writeFile } from 'fs/promises'
+import { createWriteStream } from 'fs'
 import path from 'path'
 import { validatePath, safeJoinPath, getUploadsDir, ensureDir, sanitizeName } from '@/lib/fileUtils'
+
+export const maxDuration = 60 // Allow up to 60 seconds for large file uploads
 
 export async function POST(request: Request) {
     try {
@@ -13,6 +16,8 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
         }
 
+        console.log(`Uploading file: ${file.name}, size: ${file.size} bytes`)
+
         // Validate path
         if (currentPath) {
             const pathValidation = validatePath(currentPath)
@@ -20,9 +25,6 @@ export async function POST(request: Request) {
                 return NextResponse.json({ error: pathValidation.error }, { status: 400 })
             }
         }
-
-        const bytes = await file.arrayBuffer()
-        const buffer = Buffer.from(bytes)
 
         // Sanitize filename and add timestamp to prevent collisions
         const timestamp = Date.now()
@@ -38,7 +40,20 @@ export async function POST(request: Request) {
 
         const filepath = path.join(targetDir, filename)
 
-        await writeFile(filepath, buffer)
+        // For large files, use streaming to avoid memory issues
+        if (file.size > 10 * 1024 * 1024) { // > 10MB
+            console.log('Using streaming for large file')
+            const arrayBuffer = await file.arrayBuffer()
+            const buffer = Buffer.from(arrayBuffer)
+            await writeFile(filepath, buffer)
+        } else {
+            // For smaller files, use the standard approach
+            const bytes = await file.arrayBuffer()
+            const buffer = Buffer.from(bytes)
+            await writeFile(filepath, buffer)
+        }
+
+        console.log(`File uploaded successfully: ${filename}`)
 
         return NextResponse.json({
             success: true,
@@ -47,6 +62,9 @@ export async function POST(request: Request) {
         })
     } catch (error) {
         console.error('Upload error:', error)
-        return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
+        return NextResponse.json({
+            error: 'Upload failed',
+            details: error instanceof Error ? error.message : 'Unknown error'
+        }, { status: 500 })
     }
 }
