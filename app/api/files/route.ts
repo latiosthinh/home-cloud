@@ -25,6 +25,9 @@ export async function GET(request: Request) {
         // Read directory contents
         let items = await readDirectoryContents(targetDir, currentPath)
 
+        // Filter out system folders (like .config)
+        items = items.filter(item => item.name !== '.config')
+
         // Filter by search query
         if (searchQuery) {
             const query = searchQuery.toLowerCase()
