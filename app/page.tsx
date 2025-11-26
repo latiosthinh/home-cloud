@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useEffect, useCallback } from 'react'
 import { LogOut } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { FileItem, getBreadcrumbs } from '@/lib/fileIconUtils'
+import { useDashboardStore } from '@/lib/store'
 import { UploadArea } from './components/UploadArea'
 import { BreadcrumbNav } from './components/BreadcrumbNav'
 import { Toolbar } from './components/Toolbar'
@@ -12,28 +13,39 @@ import { NewFolderModal } from './components/NewFolderModal'
 import { DeleteModal } from './components/DeleteModal'
 import { ShareModal } from './components/ShareModal'
 
-type SortBy = 'name' | 'date'
-type SortOrder = 'asc' | 'desc'
-
 export default function Dashboard() {
-  const [items, setItems] = useState<FileItem[]>([])
-  const [currentPath, setCurrentPath] = useState('')
-  const [isDragging, setIsDragging] = useState(false)
-  const [uploading, setUploading] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [sortBy, setSortBy] = useState<SortBy>('date')
-  const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
-  const [showNewFolderModal, setShowNewFolderModal] = useState(false)
-  const [newFolderName, setNewFolderName] = useState('')
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [itemToDelete, setItemToDelete] = useState<FileItem | null>(null)
-
-  // Share state
-  const [showShareModal, setShowShareModal] = useState(false)
-  const [shareLink, setShareLink] = useState('')
-  const [itemToShare, setItemToShare] = useState<FileItem | null>(null)
-
   const router = useRouter()
+
+  // Get state and actions from Zustand store
+  const {
+    items,
+    currentPath,
+    searchQuery,
+    sortBy,
+    sortOrder,
+    isDragging,
+    uploading,
+    showNewFolderModal,
+    newFolderName,
+    showDeleteModal,
+    itemToDelete,
+    showShareModal,
+    shareLink,
+    itemToShare,
+    setItems,
+    setSearchQuery,
+    toggleSort,
+    setIsDragging,
+    setUploading,
+    openNewFolderModal,
+    closeNewFolderModal,
+    setNewFolderName,
+    openDeleteModal,
+    closeDeleteModal,
+    openShareModal,
+    closeShareModal,
+    navigateToFolder,
+  } = useDashboardStore()
 
   const fetchFiles = useCallback(async () => {
     try {
@@ -53,7 +65,7 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Failed to fetch files', error)
     }
-  }, [router, currentPath, sortBy, sortOrder, searchQuery])
+  }, [router, currentPath, sortBy, sortOrder, searchQuery, setItems])
 
   useEffect(() => {
     fetchFiles()
@@ -116,8 +128,7 @@ export default function Dashboard() {
       })
 
       if (res.ok) {
-        setNewFolderName('')
-        setShowNewFolderModal(false)
+        closeNewFolderModal()
         fetchFiles()
       }
     } catch (error) {
@@ -136,8 +147,7 @@ export default function Dashboard() {
       })
 
       if (res.ok) {
-        setShowDeleteModal(false)
-        setItemToDelete(null)
+        closeDeleteModal()
         fetchFiles()
       }
     } catch (error) {
@@ -180,9 +190,7 @@ export default function Dashboard() {
       if (res.ok) {
         const share = await res.json()
         const link = `${window.location.origin}/share/${share.id}`
-        setShareLink(link)
-        setItemToShare(item)
-        setShowShareModal(true)
+        openShareModal(item, link)
       }
     } catch (error) {
       console.error('Share failed', error)
@@ -194,22 +202,8 @@ export default function Dashboard() {
     alert('Link copied to clipboard!')
   }
 
-  const navigateToFolder = (folderPath: string) => {
-    setCurrentPath(folderPath)
-    setSearchQuery('')
-  }
-
   const handleLogout = () => {
     router.push('/login')
-  }
-
-  const toggleSort = (newSortBy: SortBy) => {
-    if (sortBy === newSortBy) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
-    } else {
-      setSortBy(newSortBy)
-      setSortOrder('asc')
-    }
   }
 
   return (
@@ -232,7 +226,7 @@ export default function Dashboard() {
         sortOrder={sortOrder}
         onSearchChange={setSearchQuery}
         onSortChange={toggleSort}
-        onNewFolder={() => setShowNewFolderModal(true)}
+        onNewFolder={openNewFolderModal}
       />
 
       <UploadArea
@@ -253,10 +247,7 @@ export default function Dashboard() {
             onNavigate={navigateToFolder}
             onDownload={handleDownload}
             onShare={handleShare}
-            onDelete={(item) => {
-              setItemToDelete(item)
-              setShowDeleteModal(true)
-            }}
+            onDelete={openDeleteModal}
           />
         ))}
       </div>
@@ -270,7 +261,7 @@ export default function Dashboard() {
       <NewFolderModal
         isOpen={showNewFolderModal}
         folderName={newFolderName}
-        onClose={() => setShowNewFolderModal(false)}
+        onClose={closeNewFolderModal}
         onFolderNameChange={setNewFolderName}
         onCreate={handleCreateFolder}
       />
@@ -278,7 +269,7 @@ export default function Dashboard() {
       <DeleteModal
         isOpen={showDeleteModal}
         item={itemToDelete}
-        onClose={() => setShowDeleteModal(false)}
+        onClose={closeDeleteModal}
         onConfirm={handleDeleteItem}
       />
 
@@ -286,7 +277,7 @@ export default function Dashboard() {
         isOpen={showShareModal}
         item={itemToShare}
         shareLink={shareLink}
-        onClose={() => setShowShareModal(false)}
+        onClose={closeShareModal}
         onCopy={copyToClipboard}
       />
     </div>

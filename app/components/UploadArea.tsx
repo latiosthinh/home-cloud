@@ -36,7 +36,7 @@ export function UploadArea({
                 hidden
                 onChange={onFileSelect}
             />
-            <div className="upload-content">
+            <div className="upload-content flex flex-col items-center justify-center">
                 <Upload size={48} style={{ marginBottom: '1rem', color: isDragging ? '#3b82f6' : '#94a3b8' }} />
                 <h3>{uploading ? 'Uploading...' : 'Drop files here or click to upload'}</h3>
                 <p style={{ color: '#64748b', marginTop: '0.5rem' }}>
