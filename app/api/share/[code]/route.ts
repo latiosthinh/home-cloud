@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getShare, incrementShareViews } from '@/lib/shareUtils'
-import { getItemStats, readDirectoryContents } from '@/lib/fileUtils'
+import { getItemStats, readDirectoryContents, FileSystemItem } from '@/lib/fileUtils'
 import path from 'path'
 
 export async function GET(
@@ -25,7 +25,7 @@ export async function GET(
             // Increment view count
             await incrementShareViews(code)
 
-            let children = []
+            let children: FileSystemItem[] = []
             if (stats.isDirectory) {
                 children = await readDirectoryContents(fullPath, share.path)
             }
