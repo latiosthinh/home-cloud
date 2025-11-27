@@ -39,14 +39,20 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
+# Install su-exec for permission handling
+RUN apk add --no-cache su-exec
+
 # Create uploads directory and set permissions
 RUN mkdir -p ./uploads && chown -R nextjs:nodejs ./uploads
 
-USER nextjs
+# Copy entrypoint script
+COPY entrypoint.sh ./
+RUN chmod +x ./entrypoint.sh
 
 EXPOSE 3000
 
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
+ENTRYPOINT ["./entrypoint.sh"]
 CMD ["node", "server.js"]
