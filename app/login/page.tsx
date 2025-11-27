@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { Lock } from 'lucide-react'
 
@@ -35,9 +36,7 @@ export default function LoginPage() {
         <div className="login-container">
             <div className="login-card">
                 <div className="login-header">
-                    <div className="icon-wrapper">
-                        <Lock size={24} />
-                    </div>
+                    <Image src="/home-cloud.svg" alt="Home Cloud Logo" width={48} height={48} className="mx-auto" />
                     <h1>Welcome Back</h1>
                     <p>Enter your password to access Home Cloud</p>
                 </div>

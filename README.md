@@ -2,6 +2,8 @@
 
 <div align="center">
 
+<img src="/home-cloud.svg" alt="Home Cloud Logo" width="120" height="120" />
+
 **A beautiful, self-hosted cloud storage solution built with Next.js**
 
 ![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)

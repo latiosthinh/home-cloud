@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useCallback } from 'react'
+import Image from 'next/image'
 import { LogOut } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { FileItem, getBreadcrumbs } from '@/lib/fileIconUtils'
@@ -249,7 +250,10 @@ export default function Dashboard() {
       onDrop={handleDrop}
     >
       <header className="dashboard-header">
-        <h1>Home Cloud</h1>
+        <div className="flex items-center gap-3">
+          <Image src="/home-cloud.svg" alt="Home Cloud Logo" width={32} height={32} />
+          <h1>Home Cloud</h1>
+        </div>
         <button onClick={handleLogout} className="icon-button" title="Logout">
           <LogOut size={20} />
         </button>
